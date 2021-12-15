@@ -1,0 +1,106 @@
+%{
+    #include <iostream>
+    #include <string>
+
+    using namespace std;
+
+    extern int yylineno;
+    extern FILE* yyin;
+    int yylex();
+    int yyerror(string s);
+%}
+
+%union {
+    long long num;
+    std::string *pid;
+}
+
+%token VAR t_BEGIN END ASSIGN IF THEN ELSE ENDIF
+%token WHILE DO ENDWHILE REPEAT UNTIL FOR FROM TO DOWNTO ENDFOR
+%token READ WRITE 
+%token EQ NEQ LE GE LEQ GEQ 
+%token COMMA COLON SEMICOLON LBRACKET RBRACKET
+%token ERROR
+
+%token <num> NUM
+%token <pid> PIDENTIFIER
+
+%left PLUS MINUS
+%left TIMES DIV MOD 
+
+%start program
+
+%%
+program     : VAR declarations t_BEGIN commands END
+            | t_BEGIN commands END
+            ;
+
+declarations: declarations COMMA PIDENTIFIER
+            | declarations COMMA PIDENTIFIER LBRACKET NUM COLON NUM RBRACKET
+            | PIDENTIFIER
+            | PIDENTIFIER LBRACKET NUM COLON NUM RBRACKET
+            ;
+
+commands    : commands command
+            | command
+            ;
+
+command     : identifier ASSIGN expression SEMICOLON
+            | IF condition THEN commands ELSE commands ENDIF
+            | IF condition THEN commands ENDIF
+            | WHILE condition DO commands ENDWHILE
+            | REPEAT commands UNTIL condition SEMICOLON
+            | FOR PIDENTIFIER FROM value TO value DO commands ENDFOR
+            | FOR PIDENTIFIER FROM value DOWNTO value DO commands ENDFOR
+            | READ identifier SEMICOLON
+            | WRITE value SEMICOLON
+            ;
+
+expression  : value
+            | value PLUS value
+            | value MINUS value
+            | value TIMES value
+            | value DIV value
+            | value MOD value
+            ;
+
+condition   : value EQ value
+            | value NEQ value
+            | value LE value
+            | value GE value
+            | value LEQ value
+            | value GEQ value
+            ;
+
+value       : NUM
+            | identifier
+
+identifier  : PIDENTIFIER
+            | PIDENTIFIER LBRACKET PIDENTIFIER RBRACKET
+            | PIDENTIFIER LBRACKET NUM RBRACKET
+
+
+
+%%
+
+int yyerror(string s) {
+    cout << s << " at line " << yylineno << endl;
+};
+
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        cerr << "\e[31mError: \e[0mNo input file" << endl;
+        return 1;
+    }
+
+    FILE *src = fopen(argv[1], "r");
+
+    if (!src) {
+        cerr << "\e[31mError: \e[0mCannot open file " << argv[1] << endl;
+        return 1;
+    }
+
+    yyin = src;
+    yyparse();
+    fclose(src);
+}

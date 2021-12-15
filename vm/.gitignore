@@ -1,0 +1,6 @@
+maszyna-wirtualna
+maszyna-wirtualna-cln
+lexer.cc
+parser.cc
+parser.hh
+*.o
