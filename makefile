@@ -1,11 +1,20 @@
-all: lexer parser
-	g++ parser.tab.cpp lex.yy.cpp -o compiler
+CC = g++
+FLAGS = 
+
+all: lexer parser generator.o symtab.o
+	$(CC) $(FLAGS) parser.tab.cpp lex.yy.cpp generator.o symtab.o -o compiler
+
+generator.o:
+	$(CC) $(FLAGS) -c generator.cpp
+
+symtab.o:
+	$(CC) $(FLAGS) -c symtab.cpp
 
 lexer:
-	flex -o lex.yy.cpp lex.l
+	flex -o lex.yy.cpp lexer.l
 
 parser:
 	bison -d parser.ypp
 
 clean:
-	rm lex.yy.cpp parser.tab.*
+	rm *.o lex.yy.cpp parser.tab.*

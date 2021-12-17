@@ -1,6 +1,10 @@
 %{
     #include <iostream>
     #include <string>
+    #include <fstream>
+    #include <vector>
+    #include "symtab.hpp"
+    #include "generator.hpp"
 
     using namespace std;
 
@@ -8,6 +12,10 @@
     extern FILE* yyin;
     int yylex();
     int yyerror(string s);
+
+    Generator* gen;
+    Symtab* sym;
+    vector<string> code;
 %}
 
 %union {
@@ -31,13 +39,13 @@
 %start program
 
 %%
-program     : VAR declarations t_BEGIN commands END
-            | t_BEGIN commands END
+program     : VAR declarations t_BEGIN commands END                             {gen->gen_end();}
+            | t_BEGIN commands END                                              {gen->gen_end();}
             ;
 
-declarations: declarations COMMA PIDENTIFIER
+declarations: declarations COMMA PIDENTIFIER                                    {sym->putsym(*$3);}
             | declarations COMMA PIDENTIFIER LBRACKET NUM COLON NUM RBRACKET
-            | PIDENTIFIER
+            | PIDENTIFIER                                                       {sym->putsym(*$1);}
             | PIDENTIFIER LBRACKET NUM COLON NUM RBRACKET
             ;
 
@@ -100,7 +108,22 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    sym = new Symtab();
+    gen = new Generator(sym);
+
     yyin = src;
     yyparse();
     fclose(src);
+
+    ofstream output;
+    output.open(argv[2] ? argv[2] : "a.out");
+
+    code = gen->get_code();
+    sym->print();
+    vector<string>::iterator it;
+
+    for(it = code.begin(); it != code.end(); it++) {
+        output << *it << endl;
+    }
+    output.close();
 }
