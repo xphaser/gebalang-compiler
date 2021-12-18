@@ -1,4 +1,6 @@
+.vscode
 compiler
 lex.yy.cpp
 parser.tab.*
 *.o
+*.test.*

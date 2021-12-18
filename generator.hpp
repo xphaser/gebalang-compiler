@@ -20,5 +20,6 @@ public:
     long long get_offset();
     vector<string> get_code();
     void gen_assign(Symbol* sym, long long val);
+    void gen_const(long long c);
     void gen_end();
 };
