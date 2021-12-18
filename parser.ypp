@@ -21,6 +21,7 @@
 %union {
     long long num;
     std::string *pid;
+    symbol* sym;
 }
 
 %token VAR t_BEGIN END ASSIGN IF THEN ELSE ENDIF
@@ -34,7 +35,11 @@
 %token <pid> PIDENTIFIER
 
 %left PLUS MINUS
-%left TIMES DIV MOD 
+%left TIMES DIV MOD
+
+%type <sym> value
+%type <sym> expression
+%type <sym> identifier
 
 %start program
 
@@ -53,18 +58,18 @@ commands    : commands command
             | command
             ;
 
-command     : identifier ASSIGN expression SEMICOLON
+command     : identifier ASSIGN expression SEMICOLON                            {gen->gen_assign($1);}
             | IF condition THEN commands ELSE commands ENDIF
             | IF condition THEN commands ENDIF
             | WHILE condition DO commands ENDWHILE
             | REPEAT commands UNTIL condition SEMICOLON
             | FOR PIDENTIFIER FROM value TO value DO commands ENDFOR
             | FOR PIDENTIFIER FROM value DOWNTO value DO commands ENDFOR
-            | READ identifier SEMICOLON
-            | WRITE value SEMICOLON
+            | READ identifier SEMICOLON                                         {gen->gen_read($2);}
+            | WRITE value SEMICOLON                                             {gen->gen_write($2);}
             ;
 
-expression  : value
+expression  : value                                                             {gen->get_value($1);}
             | value PLUS value
             | value MINUS value
             | value TIMES value
@@ -80,10 +85,10 @@ condition   : value EQ value
             | value GEQ value
             ;
 
-value       : NUM
-            | identifier
+value       : NUM                                                              {$$=sym->get_const($1);}
+            | identifier                                                       {$$=$1;}
 
-identifier  : PIDENTIFIER
+identifier  : PIDENTIFIER                                                      {$$=sym->get_var(*$1);}
             | PIDENTIFIER LBRACKET PIDENTIFIER RBRACKET
             | PIDENTIFIER LBRACKET NUM RBRACKET
 

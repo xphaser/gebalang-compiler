@@ -19,7 +19,11 @@ public:
 
     long long get_offset();
     vector<string> get_code();
-    void gen_assign(Symbol* sym, long long val);
-    void gen_const(long long c);
+    void append_instr(string instr);
+    void gen_read(symbol* sym);
+    void gen_write(symbol* sym);
+    void gen_assign(symbol* sym);
+    void get_value(symbol* sym);
+    void gen_const(long long c, long long offset);
     void gen_end();
 };
