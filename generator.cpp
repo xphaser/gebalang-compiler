@@ -20,7 +20,7 @@ void Generator::gen_end() {
     this->append_instr("HALT");
 }
 
-void Generator::gen_const(long long c, long long offset) {
+void Generator::gen_const(long long c) {
     this->append_instr("RESET a");
     long long k = 0;
 
@@ -99,8 +99,6 @@ void Generator::gen_const(long long c, long long offset) {
         this->append_instr("RESET a");
         this->append_instr("SUB b");
     }
-
-    this->append_instr("STORE " + to_string(offset));
 }
 
 void Generator::get_value(symbol* sym) {
@@ -108,20 +106,30 @@ void Generator::get_value(symbol* sym) {
         sym->initialized = true;
 
         if(sym->is_const) {
-            this->gen_const(stoll(sym->name), sym->offset);
+            this->gen_address(sym->offset);
+            this->gen_const(stoll(sym->name));
+            this->append_instr("STORE d");
         }
         else {
             yyerror("variable \e[0;1m‘" + sym->name + "’\e[0m used before being initialized");
         }
     }
     else {
-        this->append_instr("LOAD " + to_string(sym->offset));
+        this->gen_const(sym->offset);
+        this->append_instr("LOAD a");
     }
+}
+
+void Generator::gen_address(long long addr) {
+    this->gen_const(addr);
+    this->append_instr("SWAP d");
 }
 
 void Generator::gen_assign(symbol* sym) {
     sym->initialized = true;
-    this->append_instr("STORE " + to_string(sym->offset));
+    this->append_instr("SWAP d");
+    this->gen_address(sym->offset);
+    this->append_instr("STORE d");
 }
 
 void Generator::gen_read(symbol* sym) {
@@ -133,3 +141,9 @@ void Generator::gen_write(symbol* sym) {
     this->get_value(sym);
     this->append_instr("PUT");
 }
+
+void Generator::gen_add(symbol* a, symbol* b) {};
+void Generator::gen_sub(symbol* a, symbol* b){};
+void Generator::gen_mult(symbol* a, symbol* b){};
+void Generator::gen_div(symbol* a, symbol* b){};
+void Generator::gen_mod(symbol* a, symbol* b){};

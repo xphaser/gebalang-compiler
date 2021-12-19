@@ -24,6 +24,12 @@ public:
     void gen_write(symbol* sym);
     void gen_assign(symbol* sym);
     void get_value(symbol* sym);
-    void gen_const(long long c, long long offset);
+    void gen_const(long long c);
+    void gen_address(long long addr);
+    void gen_add(symbol* a, symbol* b);
+    void gen_sub(symbol* a, symbol* b);
+    void gen_mult(symbol* a, symbol* b);
+    void gen_div(symbol* a, symbol* b);
+    void gen_mod(symbol* a, symbol* b);
     void gen_end();
 };
