@@ -142,8 +142,88 @@ void Generator::gen_write(symbol* sym) {
     this->append_instr("PUT");
 }
 
-void Generator::gen_add(symbol* a, symbol* b) {};
-void Generator::gen_sub(symbol* a, symbol* b){};
-void Generator::gen_mult(symbol* a, symbol* b){};
-void Generator::gen_div(symbol* a, symbol* b){};
-void Generator::gen_mod(symbol* a, symbol* b){};
+void Generator::gen_add(symbol* a, symbol* b) {
+    this->get_value(b);
+    this->append_instr("SWAP e");
+    this->get_value(a);
+    this->append_instr("ADD e");
+}
+
+void Generator::gen_sub(symbol* a, symbol* b) {
+    this->get_value(b);
+    this->append_instr("SWAP e");
+    this->get_value(a);
+    this->append_instr("SUB e");
+}
+
+void Generator::gen_mult(symbol* a, symbol* b) {}
+void Generator::gen_div(symbol* a, symbol* b) {}
+void Generator::gen_mod(symbol* a, symbol* b) {}
+
+void Generator::gen_if(lbls* l) {
+    this->code[l->end] += to_string(this->offset - l->end);
+}
+
+lbls* Generator::gen_if_else(lbls* l) {
+    this->append_instr("JUMP ");
+    this->gen_if(l);
+    l->end = this->offset - 1;
+    return l;
+}
+
+lbls* Generator::gen_eq(symbol* a, symbol* b) {
+    long long start = this->offset;
+    this->gen_sub(a, b);
+    this->append_instr("JZERO 2");
+    this->append_instr("JUMP ");
+    long long end = this->offset - 1;
+
+    return new lbls(start, end);
+}
+
+lbls* Generator::gen_neq(symbol* a, symbol *b) {
+    long long start = this->offset;
+    this->gen_sub(a, b);
+    this->append_instr("JZERO ");
+    long long end = this->offset - 1;
+
+    return new lbls(start, end);
+}
+
+lbls* Generator::gen_le(symbol* a, symbol *b) {
+    long long start = this->offset;
+    this->gen_sub(a, b);
+    this->append_instr("JNEG 2");
+    this->append_instr("JUMP ");
+    long long end = this->offset - 1;
+
+    return new lbls(start, end);
+}
+
+lbls* Generator::gen_ge(symbol* a, symbol *b) {
+    long long start = this->offset;
+    this->gen_sub(a, b);
+    this->append_instr("JPOS 2");
+    this->append_instr("JUMP ");
+    long long end = this->offset - 1;
+
+    return new lbls(start, end);
+}
+
+lbls* Generator::gen_leq(symbol* a, symbol *b) {
+    long long start = this->offset;
+    this->gen_sub(a, b);
+    this->append_instr("JPOS ");
+    long long end = this->offset - 1;
+
+    return new lbls(start, end);
+}
+
+lbls* Generator::gen_geq(symbol* a, symbol *b) {
+    long long start = this->offset;
+    this->gen_sub(a, b);
+    this->append_instr("JNEG ");
+    long long end = this->offset - 1;
+
+    return new lbls(start, end);
+}
