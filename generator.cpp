@@ -156,8 +156,57 @@ void Generator::gen_sub(symbol* a, symbol* b) {
     this->append_instr("SUB e");
 }
 
-void Generator::gen_mult(symbol* a, symbol* b) {}
-void Generator::gen_div(symbol* a, symbol* b) {}
+void Generator::gen_mult(symbol* a, symbol* b) {
+    if(a->is_const && b->is_const) {
+        long long c = stoll(a->name) * stoll(b->name);
+        this->gen_const(c);
+    }
+    else { //this is pain
+        this->append_instr("RESET g"); //res=0
+        this->get_value(a);
+        this->append_instr("JPOS 2");  //a>0
+        this->append_instr("JUMP ");   //outside while
+        long long start = this->get_offset();
+        this->append_instr("RESET e"); //x=0
+        this->append_instr("INC e");   //x++;
+        this->append_instr("SWAP f");  //a to regF
+        this->append_instr("RESET a");
+        this->append_instr("INC a");   //one
+        this->append_instr("SHIFT e"); //1<<x+1
+        this->append_instr("SUB f");
+        this->append_instr("JPOS 3");  //outside second while
+        this->append_instr("INC e");   //x++
+        this->append_instr("JUMP -6");
+        this->append_instr("DEC e");   //x--
+        this->get_value(b);
+        this->append_instr("SHIFT e"); //b<<x
+        this->append_instr("SWAP g");  //b<<x to regG  res from regG to ac
+        this->append_instr("ADD g");   //res+=b<<x
+        this->append_instr("SWAP g");  //res to regG
+        this->append_instr("RESET a");
+        this->append_instr("INC a");   //one
+        this->append_instr("SHIFT e"); //1<<x
+        this->append_instr("SWAP f");  //a to ac    1<<x to regF
+        this->append_instr("SUB f");   //a-= 1<<x
+        this->append_instr("JUMP " + to_string(start - this->get_offset() - 2));
+        this->code[start - 1] += to_string(this->get_offset() - start + 1); //backpatch
+        this->append_instr("SWAP g");  //res to ac
+    }
+
+   
+}
+void Generator::gen_div(symbol* a, symbol* b) {
+    if(a->name == "2") {
+        this->get_value(b);
+    }
+    else if(b->name == "2") {
+        this->get_value(a);
+    }
+
+    this->append_instr("RESET b");
+    this->append_instr("DEC b");
+    this->append_instr("SHIFT b");
+}
 void Generator::gen_mod(symbol* a, symbol* b) {}
 
 void Generator::gen_if(lbls* l) {
@@ -177,7 +226,7 @@ lbls* Generator::gen_eq(symbol* a, symbol* b) {
     this->append_instr("JZERO 2");
     this->append_instr("JUMP ");
     long long end = this->offset - 1;
-
+    cout << start <<" "<<end<<endl;
     return new lbls(start, end);
 }
 
@@ -227,3 +276,13 @@ lbls* Generator::gen_geq(symbol* a, symbol *b) {
 
     return new lbls(start, end);
 }
+
+void Generator::gen_while(lbls* l) {
+    this->append_instr("JUMP " + to_string(l->start - this->offset));
+    this->code[l->end] += to_string(this->offset - l->end);
+}
+
+void Generator::gen_repeat(long long start, lbls* l) {
+    this->code[l->end] += to_string(start - l->end);
+}
+

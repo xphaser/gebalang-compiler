@@ -17,4 +17,4 @@ parser:
 	bison -d parser.ypp
 
 clean:
-	rm *.o lex.yy.cpp parser.tab.*
+	rm -f *.o lex.yy.cpp parser.tab.*

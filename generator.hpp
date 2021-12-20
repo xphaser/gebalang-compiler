@@ -49,5 +49,7 @@ public:
     lbls* gen_ge(symbol* a, symbol* b);
     lbls* gen_leq(symbol* a, symbol* b);
     lbls* gen_geq(symbol* a, symbol* b);
+    void gen_while(lbls* l);
+    void gen_repeat(long long start, lbls* l);
     void gen_end();
 };

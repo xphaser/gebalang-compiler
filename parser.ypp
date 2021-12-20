@@ -26,7 +26,8 @@
 }
 
 %token VAR t_BEGIN END ASSIGN IF THEN ELSE ENDIF
-%token WHILE DO ENDWHILE REPEAT UNTIL FOR FROM TO DOWNTO ENDFOR
+%token WHILE DO ENDWHILE UNTIL FOR FROM TO DOWNTO ENDFOR
+%token <num> REPEAT
 %token READ WRITE 
 %token EQ NEQ LE GE LEQ GEQ 
 %token COMMA COLON SEMICOLON LBRACKET RBRACKET
@@ -64,8 +65,9 @@ command     : identifier ASSIGN expression SEMICOLON                            
             | IF condition THEN commands                                        {$2=gen->gen_if_else($2);}
               ELSE commands ENDIF                                               {gen->gen_if($2);}
             | IF condition THEN commands ENDIF                                  {gen->gen_if($2);}
-            | WHILE condition DO commands ENDWHILE
-            | REPEAT commands UNTIL condition SEMICOLON
+            | WHILE condition DO commands ENDWHILE                              {gen->gen_while($2);}
+            | REPEAT                                                            {$1=gen->get_offset();}
+              commands UNTIL condition SEMICOLON                                {gen->gen_repeat($1, $5);}
             | FOR PIDENTIFIER FROM value TO value DO commands ENDFOR
             | FOR PIDENTIFIER FROM value DOWNTO value DO commands ENDFOR
             | READ identifier SEMICOLON                                         {gen->gen_read($2);}
