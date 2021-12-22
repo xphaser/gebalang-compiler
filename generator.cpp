@@ -106,17 +106,22 @@ void Generator::get_value(symbol* sym) {
         sym->initialized = true;
 
         if(sym->is_const) {
-            this->gen_address(sym->offset);
+            //this->gen_address(sym->offset);
             this->gen_const(stoll(sym->name));
-            this->append_instr("STORE d");
+            //this->append_instr("STORE d");
         }
         else {
             yyerror("variable \e[0;1m‘" + sym->name + "’\e[0m used before being initialized");
         }
     }
     else {
-        this->gen_const(sym->offset);
-        this->append_instr("LOAD a");
+        if(sym->is_const) {
+            this->gen_const(stoll(sym->name));
+        }
+        else {
+            this->gen_const(sym->offset);
+            this->append_instr("LOAD a");
+        }
     }
 }
 
