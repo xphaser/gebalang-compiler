@@ -26,78 +26,51 @@ void Generator::gen_const(long long c) {
 
     bool neg = false;
 
-    if(c >= 1) {
-        this->append_instr("INC a");
-        k = 1;
-    }
-
-    if(c < 0) {
+    if(c<0) {
         c = -c;
         neg = true;
     }
-    
-    bool flag = false;
+    vector<int> data;
 
-    while(abs(c-k) > 0) {
-        if(abs(c-k) < 14) {
-            if(c-k > 0) {
-                this->append_instr("INC a");
-                k++;
-            } else {
-                this->append_instr("DEC a");
-                k--;
-            }
+    while(c>0) {
+        int i = 0;
+        while(c%2 == 0) {
+            c/=2;
+            i++;
         }
-        else {
-            this->append_instr("SWAP b");
-            this->append_instr("RESET a");
- 
-            while(abs(abs(c) - (k<<1)) < abs(abs(c) - k)) {
-                this->append_instr("INC a");
-                k = k << 1;
-            }
-            if(c<0)
-                k=-k;
-
-            this->append_instr("SWAP b");
-            this->append_instr("SHIFT b");
-
-            if(flag) {
-                if(c>0) {
-                    this->append_instr("ADD c");
-                }
-                else {
-                    this->append_instr("SWAP c");
-                    this->append_instr("SUB c");
-                }
-            }
-            if(abs(c-k) >= 20) {
-                c-=k;
-                k=1;
-                this->append_instr("SWAP c");
-                this->append_instr("RESET a");
-                this->append_instr("INC a");
-                flag = true;
-            }
-            else {
-                while(abs(c-k) > 0) {
-                    if(c-k > 0) {
-                        this->append_instr("INC a");
-                        k++;
-                    }
-                    else {
-                        this->append_instr("DEC a");
-                        k--;
-                    }
-                }
-            }
-        }
+        data.push_back(i);
+        c-- ;
     }
+    
+    this->append_instr("RESET a");
+    this->append_instr("RESET b");
 
-    if(neg) {
-        this->append_instr("SWAP b");
-        this->append_instr("RESET a");
-        this->append_instr("SUB b");
+    int reg = 0;
+
+    while(!data.empty()) {
+        int i = data.back();
+        data.pop_back();
+
+        if(neg)
+            this->append_instr("DEC a");
+        else
+            this->append_instr("INC a");
+        
+        if(i) {
+            if(reg < i) {
+                do {
+                    this->append_instr("INC b");
+                    reg++;
+                } while(reg < i);
+            }
+            else if(reg > i) {
+                do {
+                    this->append_instr("DEC b");
+                    reg--;
+                } while(reg > i);
+            }
+            this->append_instr("SHIFT b");
+        }
     }
 }
 
