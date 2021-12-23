@@ -20,7 +20,7 @@
 
 %union {
     long long num;
-    std::string *pid;
+    std::string* pid;
     symbol* sym;
     lbls* lbl;
 }
@@ -52,9 +52,9 @@ program     : VAR declarations t_BEGIN commands END                             
             ;
 
 declarations: declarations COMMA PIDENTIFIER                                    {sym->putsym(*$3);}
-            | declarations COMMA PIDENTIFIER LBRACKET NUM COLON NUM RBRACKET
+            | declarations COMMA PIDENTIFIER LBRACKET NUM COLON NUM RBRACKET    {sym->putarr(*$3, $5, $7);}
             | PIDENTIFIER                                                       {sym->putsym(*$1);}
-            | PIDENTIFIER LBRACKET NUM COLON NUM RBRACKET
+            | PIDENTIFIER LBRACKET NUM COLON NUM RBRACKET                       {sym->putarr(*$1, $3, $5);}
             ;
 
 commands    : commands command
@@ -94,10 +94,8 @@ value       : NUM                                                               
             | identifier                                                        {$$=$1;}
 
 identifier  : PIDENTIFIER                                                       {$$=sym->get_var(*$1);}
-            | PIDENTIFIER LBRACKET PIDENTIFIER RBRACKET
-            | PIDENTIFIER LBRACKET NUM RBRACKET
-
-
+            | PIDENTIFIER LBRACKET PIDENTIFIER RBRACKET                         {$$=sym->get_var(*$1, *$3);}
+            | PIDENTIFIER LBRACKET NUM RBRACKET                                 {$$=sym->get_var(*$1, $3);}
 
 %%
 

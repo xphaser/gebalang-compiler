@@ -21,9 +21,6 @@ void Generator::gen_end() {
 }
 
 void Generator::gen_const(long long c) {
-    this->append_instr("RESET a");
-    long long k = 0;
-
     bool neg = false;
 
     if(c<0) {
@@ -75,7 +72,15 @@ void Generator::gen_const(long long c) {
 }
 
 void Generator::get_value(symbol* sym) {
-    if(!sym->initialized) {
+    if(sym->relation >= 0) {
+        this->gen_const(sym->relation);    //get adress (of index)
+        this->append_instr("LOAD a");      //get value of index
+        this->append_instr("SWAP c");      //swap index to c
+        this->gen_const(sym->offset - sym->array_start);  //get offset
+        this->append_instr("ADD c");       //add index to offset
+        this->append_instr("LOAD a");
+    }
+    else if(!sym->initialized) {
         sym->initialized = true;
 
         if(sym->is_const) {
@@ -106,7 +111,17 @@ void Generator::gen_address(long long addr) {
 void Generator::gen_assign(symbol* sym) {
     sym->initialized = true;
     this->append_instr("SWAP d");
-    this->gen_address(sym->offset);
+    if(sym->relation >= 0) {
+        this->gen_const(sym->relation);    //get adress (of index)
+        this->append_instr("LOAD a");      //get value of index
+        this->append_instr("SWAP c");      //swap index to c
+        this->gen_const(sym->offset - sym->array_start);  //get offset
+        this->append_instr("ADD c");       //add index to offset
+        this->append_instr("SWAP d");
+    }
+    else {
+        this->gen_address(sym->offset);
+    }
     this->append_instr("STORE d");
 }
 
