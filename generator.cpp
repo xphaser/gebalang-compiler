@@ -155,35 +155,50 @@ void Generator::gen_mult(symbol* a, symbol* b) {
         this->gen_const(c);
     }
     else {
-        this->append_instr("RESET g"); //res=0
-        this->get_value(a);
-        this->append_instr("JPOS 2");  //a>0
-        this->append_instr("JUMP ");   //outside while
-        long long start = this->get_offset();
-        this->append_instr("RESET e"); //x=0
-        this->append_instr("INC e");   //x++;
-        this->append_instr("SWAP f");  //a to regF
-        this->append_instr("RESET a");
-        this->append_instr("INC a");   //one
-        this->append_instr("SHIFT e"); //1<<x+1
-        this->append_instr("SUB f");
-        this->append_instr("JPOS 3");  //outside second while
-        this->append_instr("INC e");   //x++
-        this->append_instr("JUMP -6");
-        this->append_instr("DEC e");   //x--
         this->get_value(b);
-        this->append_instr("SHIFT e"); //b<<x
-        this->append_instr("SWAP g");  //b<<x to regG  res from regG to ac
-        this->append_instr("ADD g");   //res+=b<<x
-        this->append_instr("SWAP g");  //res to regG
+        this->append_instr("SWAP d");
+        this->get_value(a);
+        this->append_instr("RESET h");
+        this->append_instr("JNEG 2");
+        this->append_instr("JUMP 5");
+        this->append_instr("RESET c");
+        this->append_instr("SWAP c");
+        this->append_instr("SUB c");
+        this->append_instr("INC h");
+        this->append_instr("RESET g");
+        this->append_instr("JPOS 2");
+        this->append_instr("JUMP ");
+        long long start = this->get_offset();
+        this->append_instr("RESET e");
+        this->append_instr("INC e");;
+        this->append_instr("SWAP f");
         this->append_instr("RESET a");
-        this->append_instr("INC a");   //one
-        this->append_instr("SHIFT e"); //1<<x
-        this->append_instr("SWAP f");  //a to ac    1<<x to regF
-        this->append_instr("SUB f");   //a-= 1<<x
+        this->append_instr("INC a");
+        this->append_instr("SHIFT e");
+        this->append_instr("SUB f");
+        this->append_instr("JPOS 3");
+        this->append_instr("INC e");
+        this->append_instr("JUMP -6");
+        this->append_instr("DEC e");
+        this->append_instr("RESET a");
+        this->append_instr("ADD d");
+        this->append_instr("SHIFT e");
+        this->append_instr("SWAP g");
+        this->append_instr("ADD g");
+        this->append_instr("SWAP g");
+        this->append_instr("RESET a");
+        this->append_instr("INC a");
+        this->append_instr("SHIFT e");
+        this->append_instr("SWAP f");
+        this->append_instr("SUB f");
         this->append_instr("JUMP " + to_string(start - this->get_offset() - 2));
-        this->code[start - 1] += to_string(this->get_offset() - start + 1); //backpatch
-        this->append_instr("SWAP g");  //res to ac
+        this->code[start - 1] += to_string(this->get_offset() - start + 1);
+        this->append_instr("SWAP h");
+        this->append_instr("JZERO 4");
+        this->append_instr("RESET a");
+        this->append_instr("SUB g");
+        this->append_instr("JUMP 2");
+        this->append_instr("SWAP g");
     }
 }
 
@@ -196,50 +211,62 @@ void Generator::gen_div(symbol* a, symbol* b) {
         this->get_value(b);
         long long addr = this->get_offset();
         this->append_instr("JZERO ");
-        this->append_instr("SWAP f");  //b to regF
+        this->append_instr("RESET h");
+        this->append_instr("JPOS 5");
+        this->append_instr("INC h");
+        this->append_instr("SWAP f");
+        this->append_instr("RESET a");
+        this->append_instr("SUB f");
+        this->append_instr("SWAP f");
         this->append_instr("RESET a");
         this->append_instr("ADD f");
         this->append_instr("SWAP d");
         this->get_value(a);
-        this->append_instr("SWAP e");  //a to regE
+        this->append_instr("JNEG 2");
+        this->append_instr("JUMP 5");
+        this->append_instr("DEC h");
+        this->append_instr("SWAP e");
+        this->append_instr("RESET a");
+        this->append_instr("SUB e");
+        this->append_instr("SWAP e");
         this->append_instr("RESET b");
-        this->append_instr("INC b");   //one;
-        this->append_instr("RESET g"); //res=0;
-
+        this->append_instr("INC b");
+        this->append_instr("RESET g");
         this->append_instr("RESET a");
-        this->append_instr("ADD e");   //ac=a
-        this->append_instr("SUB f");   //ac=a-b
-        this->append_instr("JZERO 26"); //somewhere lol
+        this->append_instr("ADD e");
+        this->append_instr("SUB f");
+        this->append_instr("JZERO 26");
         this->append_instr("JNEG 26");
-        this->append_instr("RESET c"); //q=0;
-        this->append_instr("INC c");   //q=1;
-        //while
+        this->append_instr("RESET c");
+        this->append_instr("INC c");
         this->append_instr("RESET a");
-        this->append_instr("ADD f");   //cpy b to ac
-        this->append_instr("SHIFT b"); //b=b<<1;
-        this->append_instr("SUB e");   //
-        this->append_instr("JPOS 8");  //b<<1 > a
-        this->append_instr("SWAP f");  //swap b to ac
-        this->append_instr("SHIFT b"); //b<<1
-        this->append_instr("SWAP f");  //b from ac to regF
-        this->append_instr("SWAP c");  //q to ac
-        this->append_instr("SHIFT b"); //q<<1;
-        this->append_instr("SWAP c");  //q to regC
+        this->append_instr("ADD f");
+        this->append_instr("SHIFT b");
+        this->append_instr("SUB e");
+        this->append_instr("JPOS 8");
+        this->append_instr("SWAP f");
+        this->append_instr("SHIFT b");
+        this->append_instr("SWAP f");
+        this->append_instr("SWAP c");
+        this->append_instr("SHIFT b");
+        this->append_instr("SWAP c");
         this->append_instr("JUMP -11");
-        this->append_instr("SWAP g");  //res to ac
-        this->append_instr("ADD c");   //res+=q;
-        this->append_instr("SWAP g");  //res to regD;
-        this->append_instr("SWAP e");  //a to ac
-        this->append_instr("SUB f");   //a=a-b
-        this->append_instr("SWAP e");  //a to regE
+        this->append_instr("SWAP g");
+        this->append_instr("ADD c");
+        this->append_instr("SWAP g");
+        this->append_instr("SWAP e");
+        this->append_instr("SUB f");
+        this->append_instr("SWAP e");
         this->append_instr("RESET a");
         this->append_instr("ADD d");
         this->append_instr("SWAP f");
         this->append_instr("JUMP -28");
-
-        //if a==b
         this->append_instr("INC g");
-        //if a<b
+        this->append_instr("SWAP h");
+        this->append_instr("JZERO 4");
+        this->append_instr("RESET a");
+        this->append_instr("SUB g");
+        this->append_instr("JUMP 2");
         this->append_instr("SWAP g");
         this->code[addr] += to_string(this->get_offset() - addr);
     }
@@ -254,39 +281,62 @@ void Generator::gen_mod(symbol* a, symbol* b) {
         this->get_value(b);
         long long addr = this->get_offset();
         this->append_instr("JZERO ");
-        this->append_instr("SWAP f");  //b to regF
+        this->append_instr("RESET h");
+        this->append_instr("RESET g");
+        this->append_instr("JPOS 6");
+        this->append_instr("INC g");
+        this->append_instr("INC h");
+        this->append_instr("SWAP f");
+        this->append_instr("RESET a");
+        this->append_instr("SUB f");
+        this->append_instr("SWAP f");
         this->append_instr("RESET a");
         this->append_instr("ADD f");
         this->append_instr("SWAP d");
         this->get_value(a);
-        this->append_instr("SWAP e");  //a to regE
-        this->append_instr("RESET b");
-        this->append_instr("INC b");   //one
+        this->append_instr("JNEG 2");
+        this->append_instr("JUMP 5");
+        this->append_instr("DEC h");
+        this->append_instr("SWAP e");
         this->append_instr("RESET a");
-        this->append_instr("ADD e");   //ac=a
-        this->append_instr("SUB f");   //ac=a-b
+        this->append_instr("SUB e");
+        this->append_instr("SWAP e");
+        this->append_instr("RESET b");
+        this->append_instr("INC b");
+        this->append_instr("RESET a");
+        this->append_instr("ADD e");
+        this->append_instr("SUB f"); 
         this->append_instr("JZERO 19");
         this->append_instr("JNEG 17");
-
         this->append_instr("RESET a");
-        this->append_instr("ADD f");   //cpy b to ac
-        this->append_instr("SHIFT b"); //b=b<<1;
-        this->append_instr("SUB e");   //
-        this->append_instr("JPOS 5");  //b<<1 > a
-        this->append_instr("SWAP f");  //swap b to ac
-        this->append_instr("SHIFT b"); //b<<1
-        this->append_instr("SWAP f");  //b from ac to regF
-        this->append_instr("JUMP -8"); //b<<1 > a
-        this->append_instr("SWAP e");  //a to ac
-        this->append_instr("SUB f");   //a=a-b
-        this->append_instr("SWAP e");  //a to regE
+        this->append_instr("ADD f");
+        this->append_instr("SHIFT b");
+        this->append_instr("SUB e");
+        this->append_instr("JPOS 5");
+        this->append_instr("SWAP f");
+        this->append_instr("SHIFT b");
+        this->append_instr("SWAP f");
+        this->append_instr("JUMP -8");
+        this->append_instr("SWAP e");
+        this->append_instr("SUB f");
+        this->append_instr("SWAP e");
         this->append_instr("RESET a");
         this->append_instr("ADD d");
         this->append_instr("SWAP f");
         this->append_instr("JUMP -20");
-
-        this->append_instr("SWAP e");
+        this->append_instr("SWAP h");
         this->code[addr] += to_string(this->get_offset() - addr);
+        this->append_instr("JZERO 5"); 
+        this->append_instr("RESET a");
+        this->append_instr("ADD f");
+        this->append_instr("SUB e");
+        this->append_instr("SWAP e");
+        this->append_instr("SWAP g");
+        this->append_instr("JZERO 4");
+        this->append_instr("RESET a");
+        this->append_instr("SUB e");
+        this->append_instr("JUMP 2");
+        this->append_instr("SWAP e");
     }
 }
 
