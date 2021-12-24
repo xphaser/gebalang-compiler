@@ -324,8 +324,10 @@ void Generator::gen_mod(symbol* a, symbol* b) {
         this->append_instr("ADD d");
         this->append_instr("SWAP f");
         this->append_instr("JUMP -20");
+        this->append_instr("SWAP e");
+        this->append_instr("JZERO 14");
+        this->append_instr("SWAP e");
         this->append_instr("SWAP h");
-        this->code[addr] += to_string(this->get_offset() - addr);
         this->append_instr("JZERO 5"); 
         this->append_instr("RESET a");
         this->append_instr("ADD f");
@@ -337,6 +339,7 @@ void Generator::gen_mod(symbol* a, symbol* b) {
         this->append_instr("SUB e");
         this->append_instr("JUMP 2");
         this->append_instr("SWAP e");
+        this->code[addr] += to_string(this->get_offset() - addr);
     }
 }
 
