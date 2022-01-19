@@ -234,9 +234,10 @@ void Generator::gen_div(symbol* a, symbol* b) {
         this->append_instr("RESET g");
         this->append_instr("RESET a");
         this->append_instr("ADD e");
+        this->append_instr("JZERO 29");   //remainder = 0  we dont increment res
         this->append_instr("SUB f");
-        this->append_instr("JZERO 26");
-        this->append_instr("JNEG 26");
+        this->append_instr("JZERO 26");   //remainder = 0    we do increment res
+        this->append_instr("JNEG 31");    //remainder = sth  we dont increment res
         this->append_instr("RESET c");
         this->append_instr("INC c");
         this->append_instr("RESET a");
@@ -260,12 +261,22 @@ void Generator::gen_div(symbol* a, symbol* b) {
         this->append_instr("RESET a");
         this->append_instr("ADD d");
         this->append_instr("SWAP f");
-        this->append_instr("JUMP -28");
-        this->append_instr("INC g");
+        this->append_instr("JUMP -29");
+
+        this->append_instr("INC g"); //
         this->append_instr("SWAP h");
-        this->append_instr("JZERO 4");
+
+        this->append_instr("JZERO 10");
         this->append_instr("RESET a");
         this->append_instr("SUB g");
+        this->append_instr("JUMP 8");
+        
+        this->append_instr("SWAP h");
+
+        this->append_instr("JZERO 5");
+        this->append_instr("RESET a");
+        this->append_instr("SUB g");
+        this->append_instr("DEC a");
         this->append_instr("JUMP 2");
         this->append_instr("SWAP g");
         this->code[addr] += to_string(this->get_offset() - addr);
@@ -419,4 +430,3 @@ void Generator::gen_while(lbls* l) {
 void Generator::gen_repeat(long long start, lbls* l) {
     this->code[l->end] += to_string(start - l->end);
 }
-
