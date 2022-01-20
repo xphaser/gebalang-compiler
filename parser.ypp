@@ -23,11 +23,14 @@
     std::string* pid;
     symbol* sym;
     lbls* lbl;
+    forlbl* flbl;
 }
 
 %token VAR t_BEGIN END ASSIGN IF THEN ELSE ENDIF
-%token WHILE DO ENDWHILE UNTIL FOR FROM TO DOWNTO ENDFOR
+%token WHILE ENDWHILE UNTIL FROM TO DOWNTO ENDFOR
 %token <num> REPEAT
+%token <flbl> FOR
+%token <sym> DO
 %token READ WRITE 
 %token EQ NEQ LE GE LEQ GEQ 
 %token COMMA COLON SEMICOLON LBRACKET RBRACKET
@@ -68,8 +71,16 @@ command     : identifier ASSIGN expression SEMICOLON                            
             | WHILE condition DO commands ENDWHILE                              {gen->gen_while($2);}
             | REPEAT                                                            {$1=gen->get_offset();}
               commands UNTIL condition SEMICOLON                                {gen->gen_repeat($1, $5);}
-            | FOR PIDENTIFIER FROM value TO value DO commands ENDFOR
-            | FOR PIDENTIFIER FROM value DOWNTO value DO commands ENDFOR
+            | FOR PIDENTIFIER FROM value TO value DO                            {sym->putit(*$2);
+                                                                                 $7=sym->getsym(*$2);
+                                                                                 $1=gen->gen_for_start($7, $4, $6, false);}
+              commands ENDFOR                                                   {gen->gen_for_end($1, false);
+                                                                                 sym->delsym(*$2);}
+            | FOR PIDENTIFIER FROM value DOWNTO value DO                        {sym->putit(*$2);
+                                                                                 $7=sym->getsym(*$2);
+                                                                                 $1=gen->gen_for_start($7, $4, $6, true);}
+              commands ENDFOR                                                   {gen->gen_for_end($1, true);
+                                                                                 sym->delsym(*$2);}
             | READ identifier SEMICOLON                                         {gen->gen_read($2);}
             | WRITE value SEMICOLON                                             {gen->gen_write($2);}
             ;

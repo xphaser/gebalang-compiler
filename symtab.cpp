@@ -14,7 +14,7 @@ void Symtab::putsym(string pid) {
         yyerror("redeclaration of \e[0;1m‘" + pid + "’\e[0m");
     }
     else {
-        this->symbols[pid] = new symbol(pid, this->offset++);
+        this->symbols[pid] = new symbol(pid, this->offset++, false);
     }
 }
 
@@ -33,8 +33,21 @@ void Symtab::putarr(string pid, long long a, long long b) {
     }
 }
 
+void Symtab::putit(string pid) {
+    if(this->find(pid)) {
+        yyerror("redeclaration of \e[0;1m‘" + pid + "’\e[0m");
+    }
+    else {
+        this->symbols[pid] = new symbol(pid, this->offset++, true);
+    }
+}
+
 symbol* Symtab::getsym(string pid) {
     return this->symbols[pid];
+}
+
+void Symtab::delsym(string pid) {
+    symbols.erase(pid);
 }
 
 symbol* Symtab::get_const(long long val) {
@@ -72,7 +85,7 @@ symbol* Symtab::get_var(string pid, long long i) {
         else {
             long long offset = arr->offset + i - arr->array_start;
             string* name = new string(pid + "[" + to_string(i) + "]");
-            symbol* sym = new symbol(*name, offset);
+            symbol* sym = new symbol(*name, offset, false);
             sym->initialized = true;
             return sym;
         }
@@ -89,7 +102,7 @@ symbol* Symtab::get_var(string pid, string i) {
     else {
         symbol* arr = this->getsym(pid);
         symbol* var = this->getsym(i);
-        if(!var->initialized) {
+        if(!var->initialized && !var->is_iterator) {
             yyerror("variable \e[0;1m‘" + var->name + "’\e[0m used before being initialized");
         }
         else if(!arr->is_array) {

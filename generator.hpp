@@ -16,6 +16,19 @@ typedef struct lbls {
     }
 } lbls;
 
+typedef struct forlbl {
+    symbol* iterator;
+    symbol* from;
+    symbol* to;
+    lbls* jump;
+    forlbl(symbol* iterator, symbol* from, symbol* to, lbls* jump) {
+        this->iterator = iterator;
+        this->from = from;
+        this->to = to;
+        this->jump = jump;
+    }
+} forlbl;
+
 class Generator {
     long long offset;
     vector<string> code;
@@ -51,5 +64,7 @@ public:
     lbls* gen_geq(symbol* a, symbol* b);
     void gen_while(lbls* l);
     void gen_repeat(long long start, lbls* l);
+    forlbl* gen_for_start(symbol* iterator, symbol* from, symbol* to, bool reverse);
+    void gen_for_end(forlbl* label, bool reverse);
     void gen_end();
 };

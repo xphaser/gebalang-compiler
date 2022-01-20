@@ -72,6 +72,9 @@ void Generator::gen_const(long long c) {
 }
 
 void Generator::get_value(symbol* sym) {
+    if(sym->is_iterator) {
+        sym->initialized = true;
+    }
     if(sym->relation >= 0) {
         this->gen_const(sym->relation);    //get adress (of index)
         this->append_instr("LOAD a");      //get value of index
@@ -234,10 +237,10 @@ void Generator::gen_div(symbol* a, symbol* b) {
         this->append_instr("RESET g");
         this->append_instr("RESET a");
         this->append_instr("ADD e");
-        this->append_instr("JZERO 29");   //remainder = 0  we dont increment res
+        this->append_instr("JZERO 29");
         this->append_instr("SUB f");
-        this->append_instr("JZERO 26");   //remainder = 0    we do increment res
-        this->append_instr("JNEG 31");    //remainder = sth  we dont increment res
+        this->append_instr("JZERO 26");
+        this->append_instr("JNEG 31");
         this->append_instr("RESET c");
         this->append_instr("INC c");
         this->append_instr("RESET a");
@@ -262,17 +265,13 @@ void Generator::gen_div(symbol* a, symbol* b) {
         this->append_instr("ADD d");
         this->append_instr("SWAP f");
         this->append_instr("JUMP -29");
-
-        this->append_instr("INC g"); //
+        this->append_instr("INC g");
         this->append_instr("SWAP h");
-
         this->append_instr("JZERO 10");
         this->append_instr("RESET a");
         this->append_instr("SUB g");
         this->append_instr("JUMP 8");
-        
         this->append_instr("SWAP h");
-
         this->append_instr("JZERO 5");
         this->append_instr("RESET a");
         this->append_instr("SUB g");
@@ -429,4 +428,44 @@ void Generator::gen_while(lbls* l) {
 
 void Generator::gen_repeat(long long start, lbls* l) {
     this->code[l->end] += to_string(start - l->end);
+}
+
+forlbl* Generator::gen_for_start(symbol* iterator, symbol* from, symbol* to, bool reverse) {
+    string tmp = to->name + "tmp";
+    this->symbols->putsym(tmp);
+    symbol *to_tmp = symbols->getsym(tmp);
+    to_tmp->initialized = true;
+    this->gen_address(to_tmp->offset);
+    this->get_value(to);
+    this->append_instr("STORE d");
+
+    this->get_value(from);
+    this->append_instr("SWAP d");
+    this->gen_address(iterator->offset);
+    this->append_instr("STORE d");
+    lbls* jump = new lbls(this->offset, 0);
+    this->append_instr("SWAP d");
+    this->get_value(to_tmp);
+    this->append_instr("SUB d");
+    
+    jump->end = this->offset + 1;
+    if(reverse) {
+        this->append_instr("JPOS ");
+    }
+    else {
+        this->append_instr("JNEG ");
+    }
+
+    return new forlbl(iterator, from, to_tmp, jump);
+}
+
+void Generator::gen_for_end(forlbl* label, bool reverse) {
+    this->gen_address(label->iterator->offset);
+    this->append_instr("LOAD d");
+    if(reverse) this->append_instr("DEC a");
+    else this-> append_instr("INC a");
+    this->append_instr("STORE d");
+
+    this->append_instr("JUMP " + to_string(label->jump->start - this->offset));
+    this->code[label->jump->end - 1] += to_string(this->offset - label->jump->end + 1);
 }
