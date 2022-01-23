@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
     output.open(argv[2] ? argv[2] : "a.out");
 
     code = gen->get_code();
-    sym->print();
+    //sym->print();
     vector<string>::iterator it;
 
     for(it = code.begin(); it != code.end(); it++) {

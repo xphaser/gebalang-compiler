@@ -83,7 +83,7 @@ void Generator::get_value(symbol* sym) {
         this->append_instr("ADD c");       //add index to offset
         this->append_instr("LOAD a");
     }
-    else if(!sym->initialized) {
+    /*else if(!sym->initialized) {
         sym->initialized = true;
 
         if(sym->is_const) {
@@ -94,7 +94,7 @@ void Generator::get_value(symbol* sym) {
         else {
             yyerror("variable \e[0;1m‘" + sym->name + "’\e[0m used before being initialized");
         }
-    }
+    }*/
     else {
         if(sym->is_const) {
             this->gen_const(stoll(sym->name));
