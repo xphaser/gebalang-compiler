@@ -40,12 +40,13 @@ typedef struct symbol {
     }
 } symbol;
 
-class Symtab {
+class symtab {
 private:
     map<string, symbol*> symbols;
 
 public:
     long long offset;
+    int temps = 0; 
 
     bool find(string pid);
     void putsym(string pid);
@@ -57,5 +58,6 @@ public:
     symbol* get_var(string pid);
     symbol* get_var(string pid, long long i);
     symbol* get_var(string pid, string i);
+    symbol* get_new_temp();
     void print();
 };

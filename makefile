@@ -1,11 +1,14 @@
 CC = g++
 FLAGS = 
 
-all: lexer parser generator.o symtab.o
-	$(CC) $(FLAGS) parser.tab.cpp lex.yy.cpp generator.o symtab.o -o compiler
+all: lexer parser symtab.o igen.o tgen.o
+	$(CC) $(FLAGS) parser.tab.cpp lex.yy.cpp symtab.o igen.o tgen.o -o compiler
 
-generator.o:
-	$(CC) $(FLAGS) -c generator.cpp
+igen.o:
+	$(CC) $(FLAGS) -c intermediate_generator.cpp -o igen.o
+
+tgen.o:
+	$(CC) $(FLAGS) -c target_generator.cpp -o tgen.o
 
 symtab.o:
 	$(CC) $(FLAGS) -c symtab.cpp

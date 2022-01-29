@@ -5,11 +5,11 @@ extern int yyerror(string s);
 
 using namespace std;
 
-bool Symtab::find(string pid) {
+bool symtab::find(string pid) {
     return this->symbols.find(pid) != this->symbols.end();
 }
 
-void Symtab::putsym(string pid) {
+void symtab::putsym(string pid) {
     if(this->find(pid)) {
         yyerror("redeclaration of \e[0;1m‘" + pid + "’\e[0m");
     }
@@ -18,7 +18,7 @@ void Symtab::putsym(string pid) {
     }
 }
 
-void Symtab::putarr(string pid, long long a, long long b) {
+void symtab::putarr(string pid, long long a, long long b) {
     if(this->find(pid)) {
         yyerror("redeclaration of \e[0;1m‘" + pid + "’\e[0m");
     }
@@ -33,7 +33,7 @@ void Symtab::putarr(string pid, long long a, long long b) {
     }
 }
 
-void Symtab::putit(string pid) {
+void symtab::putit(string pid) {
     if(this->find(pid)) {
         yyerror("redeclaration of \e[0;1m‘" + pid + "’\e[0m");
     }
@@ -42,29 +42,29 @@ void Symtab::putit(string pid) {
     }
 }
 
-symbol* Symtab::getsym(string pid) {
+symbol* symtab::getsym(string pid) {
     return this->symbols[pid];
 }
 
-void Symtab::delsym(string pid) {
+void symtab::delsym(string pid) {
     symbols.erase(pid);
 }
 
-symbol* Symtab::get_const(long long val) {
+symbol* symtab::get_const(long long val) {
     string pid = to_string(val);
 
-    if(this->find(pid)) {
-        return this->getsym(pid);
-    }
-    else {
-        this->putsym(pid);
-        symbol* sym = this->getsym(pid);
+    //if(this->find(pid)) {
+    //    return this->getsym(pid);
+    //}
+    //else {
+    //    this->putsym(pid);
+        symbol* sym =  new symbol(pid, -1, false);
         sym->is_const = true;
         return sym;
-    }
+    
 }
 
-symbol* Symtab::get_var(string pid) {
+symbol* symtab::get_var(string pid) {
     if(this->find(pid)) {
         return this->getsym(pid);
     }
@@ -73,7 +73,7 @@ symbol* Symtab::get_var(string pid) {
     }
 }
 
-symbol* Symtab::get_var(string pid, long long i) {
+symbol* symtab::get_var(string pid, long long i) {
     if(!this->find(pid)) {
         yyerror("‘" + pid + "’\e[0m is not defined");
     }
@@ -92,7 +92,7 @@ symbol* Symtab::get_var(string pid, long long i) {
     }
 }
 
-symbol* Symtab::get_var(string pid, string i) {
+symbol* symtab::get_var(string pid, string i) {
     if(!this->find(i)) {
         yyerror("‘" + i + "’\e[0m is not defined");
     }
@@ -102,10 +102,11 @@ symbol* Symtab::get_var(string pid, string i) {
     else {
         symbol* arr = this->getsym(pid);
         symbol* var = this->getsym(i);
-        if(!var->initialized && !var->is_iterator) {
-            yyerror("variable \e[0;1m‘" + var->name + "’\e[0m used before being initialized");
-        }
-        else if(!arr->is_array) {
+        //if(!var->initialized && !var->is_iterator) {
+        //    yyerror("variable \e[0;1m‘" + var->name + "’\e[0m used before being initialized");
+        //}
+        //else
+        if(!arr->is_array) {
             yyerror("incorrect use of variable \e[0;1m‘" + pid + "’\e[0m");
         }
         else {
@@ -116,7 +117,13 @@ symbol* Symtab::get_var(string pid, string i) {
     }
 }
 
-void Symtab::print() {
+symbol* symtab::get_new_temp() {
+    string temp = "t" + to_string(++this->temps);
+    putsym(temp);
+    return getsym(temp);
+}
+
+void symtab::print() {
     map<string, symbol*>::iterator it;
 
     for (it = this->symbols.begin(); it != this->symbols.end(); it++) {

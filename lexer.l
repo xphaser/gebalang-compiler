@@ -5,8 +5,10 @@
     #include <iostream>
     #include <string>
     #include "symtab.hpp"
-    #include "generator.hpp"
+    #include "intermediate_generator.hpp"
+    #include "target_generator.hpp"
     #include "parser.tab.hpp"
+
 %}
 
 pidentifier [_a-z]+
@@ -42,8 +44,8 @@ WRITE           {return WRITE;}
 PLUS            {return PLUS;}
 MINUS           {return MINUS;}
 TIMES           {return TIMES;}
-DIV             {return DIV;}
-MOD             {return MOD;}
+DIV             {return t_DIV;}
+MOD             {return t_MOD;}
 EQ              {return EQ;}
 NEQ             {return NEQ;}
 LE              {return LE;}
