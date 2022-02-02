@@ -66,16 +66,22 @@ symbol* symtab::get_const(long long val) {
 
 symbol* symtab::get_var(string pid) {
     if(this->find(pid)) {
-        return this->getsym(pid);
+        symbol* sym = this->getsym(pid);
+        if(!sym->is_array) {
+            return this->getsym(pid);
+        }
+        else {
+            yyerror("incorrect use of array \e[0;1m‘" + pid + "’\e[0m");
+        }
     }
     else {
-        yyerror("‘" + pid + "’\e[0m is not defined");
+        yyerror("\e[0;1m‘" + pid + "’\e[0m is not defined");
     }
 }
 
 symbol* symtab::get_var(string pid, long long i) {
     if(!this->find(pid)) {
-        yyerror("‘" + pid + "’\e[0m is not defined");
+        yyerror("\e[0;1m‘" + pid + "’\e[0m is not defined");
     }
     else {
         symbol* arr = this->getsym(pid);

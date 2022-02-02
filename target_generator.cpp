@@ -121,6 +121,25 @@ void target_generator::gen_end() {
 }
 
 void target_generator::gen_const(long long c) {
+    if(c==0) {
+        this->append_instr("RESET a");
+        return;
+    }
+    if(c>0 && c<=10) {
+        this->append_instr("RESET a");
+        for(int i=0; i<c; i++) {
+            this->append_instr("INC a");
+        }
+        return;
+    }
+    if(c<0 && c>=-10) {
+        this->append_instr("RESET a");
+        for(int i=0; i>c; i--) {
+            this->append_instr("DEC a");
+        }
+        return;
+    }
+
     bool neg = false;
 
     if(c<0) {
@@ -176,11 +195,11 @@ void target_generator::get_value(symbol* sym) {
         sym->initialized = true;
     }
     if(sym->relation >= 0) {
-        this->gen_const(sym->relation);    //get adress (of index)
-        this->append_instr("LOAD a");      //get value of index
-        this->append_instr("SWAP c");      //swap index to c
-        this->gen_const(sym->offset - sym->array_start);  //get offset
-        this->append_instr("ADD c");       //add index to offset
+        this->gen_const(sym->relation);
+        this->append_instr("LOAD a");
+        this->append_instr("SWAP c");
+        this->gen_const(sym->offset - sym->array_start);
+        this->append_instr("ADD c");
         this->append_instr("LOAD a");
     }
     /*else if(!sym->initialized) {
@@ -207,14 +226,27 @@ void target_generator::get_value(symbol* sym) {
 }
 
 void target_generator::gen_address(long long addr) {
+    if(addr == 0) {
+        this->append_instr("RESET d");
+        return;
+    }
+    else if(addr <= 10) {
+        this->append_instr("RESET d");
+        for(int i=0; i<addr; i++) {
+            this->append_instr("INC d");
+        }
+        return;
+    }
+    this->append_instr("SWAP d");
     this->gen_const(addr);
     this->append_instr("SWAP d");
 }
 
 void target_generator::gen_assign(symbol* sym) {
     sym->initialized = true;
-    this->append_instr("SWAP d");
+
     if(sym->relation >= 0) {
+        this->append_instr("SWAP d");
         this->gen_const(sym->relation);
         this->append_instr("LOAD a");
         this->append_instr("SWAP c");
@@ -237,20 +269,143 @@ void target_generator::gen_put() {
 }
 
 void target_generator::gen_add(symbol* a, symbol* b) {
-    this->get_value(b);
-    this->append_instr("SWAP e");
-    this->get_value(a);
-    this->append_instr("ADD e");
+    if(b->is_const) {
+        long long val = stoll(b->name);
+        this->get_value(a);
+        if(val <= 10 && val > 0) {
+            for(int i=0; i<val; i++) {
+                this->append_instr("INC a");
+            }
+        }
+        else if(val >= -10 && val < 0) {
+            for(int i=0; i>val; i--) {
+                this->append_instr("DEC a");
+            }
+        }
+        else if(val==0) {
+            return;
+        }
+        else {
+            this->append_instr("SWAP e"); 
+            this->get_value(b);
+            this->append_instr("ADD e");         
+        }
+    }
+    else if(a->is_const) {
+        long long val = stoll(a->name);
+        this->get_value(b);
+        if(val <= 10 && val > 0) {
+            for(int i=0; i<val; i++) {
+                this->append_instr("INC a");
+            }
+        }
+        else if(val >= -10 && val < 0) {
+            for(int i=0; i>val; i--) {
+                this->append_instr("DEC a");
+            }
+        }
+        else if(val==0) {
+            return;
+        }
+        else {
+            this->append_instr("SWAP e"); 
+            this->get_value(a);
+            this->append_instr("ADD e");         
+        }
+    }
+    else {
+        this->get_value(b);
+        this->append_instr("SWAP e");
+        this->get_value(a);
+        this->append_instr("ADD e");
+    }
 }
 
 void target_generator::gen_sub(symbol* a, symbol* b) {
-    this->get_value(b);
-    this->append_instr("SWAP e");
-    this->get_value(a);
-    this->append_instr("SUB e");
+    if(b->is_const) {
+        long long val = stoll(b->name);
+        this->get_value(a);
+        if(val <= 10 && val > 0) {
+            for(int i=0; i<val; i++) {
+                this->append_instr("DEC a");
+            }
+        }
+        else if(val >= -10 && val < 0) {
+            for(int i=0; i>val; i--) {
+                this->append_instr("INC a");
+            }
+        }
+        else if(val==0) {
+            return;
+        }
+        else {
+            this->append_instr("SWAP e"); 
+            this->get_value(b);
+            this->append_instr("SUB e");         
+        }
+    }
+    else if(a->is_const) {
+        long long val = stoll(a->name);
+        this->get_value(b);
+        if(val <= 10 && val > 0) {
+            for(int i=0; i<val; i++) {
+                this->append_instr("DEC a");
+            }
+        }
+        else if(val >= -10 && val < 0) {
+            for(int i=0; i>val; i--) {
+                this->append_instr("INC a");
+            }
+        }
+        else if(val==0) {
+            return;
+        }
+        else {
+            this->append_instr("SWAP e"); 
+            this->get_value(a);
+            this->append_instr("SUB e");         
+        }
+    }
+    else {
+        this->get_value(b);
+        this->append_instr("SWAP e");
+        this->get_value(a);
+        this->append_instr("SUB e");
+    }
 }
 
 void target_generator::gen_mul(symbol* a, symbol* b) {
+    if(a->is_const) {
+        long long val = stoll(a->name);
+         if(val > 1 && (val & (val-1)) == 0) {
+            int shifts = 0;
+            while(val/2 > 0) {
+                shifts++;
+                val /= 2;
+            }
+            this->gen_const(shifts);
+            this->append_instr("SWAP c");
+            this->get_value(b);
+            this->append_instr("SHIFT c");
+            return;
+        }
+    }
+    if(b->is_const) {
+        long long val = stoll(b->name);
+         if(val > 1 && (val & (val-1)) == 0) {
+            int shifts = 0;
+            while(val/2 > 0) {
+                shifts++;
+                val /= 2;
+            }
+            this->gen_const(shifts);
+            this->append_instr("SWAP c");
+            this->get_value(a);
+            this->append_instr("SHIFT c");
+            return;
+        }
+    }
+
     this->get_value(b);
     this->append_instr("SWAP d");
     this->get_value(a);
@@ -267,7 +422,6 @@ void target_generator::gen_mul(symbol* a, symbol* b) {
     long long start = this->get_offset();
     this->append_instr("RESET e");
     this->append_instr("INC e");
-    ;
     this->append_instr("SWAP f");
     this->append_instr("RESET a");
     this->append_instr("INC a");

@@ -13,6 +13,7 @@
     extern FILE* yyin;
     int yylex();
     int yyerror(string s);
+    int errors = 0;
 
     intermediate_generator* igen;
     target_generator* gen;
@@ -115,6 +116,7 @@ identifier  : PIDENTIFIER                                                       
 
 int yyerror(string s) {
     cout << s << " at line " << yylineno << endl;
+    errors++;
 };
 
 int main(int argc, char **argv) {
@@ -141,11 +143,14 @@ int main(int argc, char **argv) {
     ofstream output;
     output.open(argv[2] ? argv[2] : "a.out");
 
+    if(errors) return 1;
+
+    igen->optimize();
     instructions = igen->get_instructions();
     gen->generate_code(instructions);
     code = gen->get_code();
 
-    sym->print();
+    //sym->print();
     vector<string>::iterator it;
 
     for(it = code.begin(); it != code.end(); it++) {
@@ -153,5 +158,7 @@ int main(int argc, char **argv) {
     }
     output.close();
 
-    igen->render();
+    //igen->render();
+
+    return 0;
 }

@@ -1,6 +1,8 @@
 #include "intermediate_generator.hpp"
 #include <iostream>
 
+extern int yyerror(string s);
+
 using namespace std;
 
 void intermediate_generator::new_add(symbol* a, symbol* b) {
@@ -24,6 +26,9 @@ void intermediate_generator::new_mod(symbol* a, symbol* b) {
 }
 
 void intermediate_generator::new_assign(symbol* sym) {
+    if(sym->is_iterator) {
+        yyerror("iterator \e[0;1m‘" + sym->name + "’\e[0;m modification attempt");
+    }
     instructions.push_back(new unary(STORE, sym));
 }
 
@@ -145,6 +150,83 @@ void intermediate_generator::new_stop() {
 
 vector<instruction*> intermediate_generator::get_instructions() {
      return this->instructions;
+}
+
+void intermediate_generator::optimize() {
+    optimize_const_expr();
+    //more();
+    //cool_optimizations();
+    //i_dont_have_time_for();/
+}
+
+void intermediate_generator::optimize_const_expr() {
+    for(int i=0; i<instructions.size(); i++) {
+        switch(instructions[i]->name) {
+            case ADD: {
+                binary* instr = (binary*)instructions[i];
+                if(instr->a->is_const && instr->b->is_const) {
+                    long long val = stoll(instr->a->name) + stoll(instr->b->name);
+                   symbol* c = new symbol(to_string(val), -1, false);
+                    c->is_const = true;
+                    instructions[i] = new unary(LOAD, c);
+                }
+            } break;
+            case SUB: {
+                binary* instr = (binary*)instructions[i];
+                if(instr->a->is_const && instr->b->is_const) {
+                    long long val = stoll(instr->a->name) - stoll(instr->b->name);
+                    symbol* c = new symbol(to_string(val), -1, false);
+                    c->is_const = true;
+                    instructions[i] = new unary(LOAD, c);
+                }
+            } break;
+            case MUL: {
+                binary* instr = (binary*)instructions[i];
+                if(instr->a->is_const && instr->b->is_const) {
+                    long long val = stoll(instr->a->name) * stoll(instr->b->name);
+                    symbol* c = new symbol(to_string(val), -1, false);
+                    c->is_const = true;
+                    instructions[i] = new unary(LOAD, c);
+                }
+            } break;
+            case DIV: {
+                binary* instr = (binary*)instructions[i];
+                if(instr->a->is_const && instr->b->is_const) {
+                    long long a = stoll(instr->a->name);
+                    long long b = stoll(instr->b->name);
+                    symbol* c;
+
+                    if(b==0) {
+                        c = new symbol(to_string(b), -1, false);
+                    }
+                    else {
+                        long long val = a / b;
+                        if(a*b<0 && a%b > 0) val--;
+                        c = new symbol(to_string(val), -1, false);
+                    }
+            
+                    c->is_const = true;
+                    instructions[i] = new unary(LOAD, c);
+                }
+            } break;
+            case MOD: {
+                binary* instr = (binary*)instructions[i];
+                if(instr->a->is_const && instr->b->is_const) {
+                    symbol* c;
+
+                    if(stoll(instr->b->name) == 0) {
+                        c = new symbol(instr->b->name, -1, false);
+                    }
+                    else {
+                        long long val = stoll(instr->a->name) % stoll(instr->b->name);
+                        c = new symbol(to_string(val), -1, false);
+                    }
+                    c->is_const = true;
+                    instructions[i] = new unary(LOAD, c);
+                }
+            } break;
+        }
+    }
 }
 
 void intermediate_generator::render() {

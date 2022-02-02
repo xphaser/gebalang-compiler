@@ -131,6 +131,8 @@ public:
     void new_for_end(for_data* lbls, symbol* it, symbol* one, bool reverse);
     void new_for_end();
     void new_stop();
+    void optimize_const_expr();
+    void optimize();
 
     void render();
     vector<instruction*> get_instructions();
